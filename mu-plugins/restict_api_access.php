@@ -13,6 +13,14 @@ add_filter('rest_authentication_errors', function ($result) {
         return $result;
     }
 
+    if (strpos($_SERVER['REQUEST_URI'], 'wp/v2/categories') != false) {
+        return $result;
+    }
+
+    if (strpos($_SERVER['REQUEST_URI'], 'v2/posts') != false) {
+        return $result;
+    }
+
     if (strpos($_SERVER['REQUEST_URI'], '3460?_embed') != false) {
         return $result;
     }
@@ -38,8 +46,7 @@ add_filter('rest_authentication_errors', function ($result) {
     }
 
     // User authorized. Checking roles
-    $user = wp_get_current_user();
-    if (in_array('administrator', (array)$user->roles) || in_array('paywall_access', (array)$user->roles)) {
+    if (checkUserRightsToViewContent()) {
         return $result;
     }
 
@@ -50,3 +57,32 @@ add_filter('rest_authentication_errors', function ($result) {
         array('status' => 403)
     );
 });
+
+/**
+ * @return bool
+ */
+function checkUserRightsToViewContent()
+{
+    $user = wp_get_current_user();
+    return in_array('administrator', (array)$user->roles) || in_array('paywall_access', (array)$user->roles);
+}
+
+function checkSlug($data){
+    switch ($data->data['slug']) {
+        case 'editorial':
+            return true;
+    }
+    return false;
+}
+
+function post_restrict_content_user_json($data, $post, $context)
+{
+    if (!checkUserRightsToViewContent() && !checkSlug($data)) {
+        if (isset($data->data['content'])){
+            $data->data['content']['rendered'] = null;
+        }
+    }
+    return $data;
+}
+
+add_filter('rest_prepare_post', 'post_restrict_content_user_json', 10, 3);
