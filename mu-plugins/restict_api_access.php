@@ -83,6 +83,8 @@ function checkSlug($data)
         case 'aktuelle-ausgabe':
         case 'liebe-leserin-lieber-leser':
         case 'editorial':
+        case 'impressum':
+        case 'datenschutzerklaerung':
             return true;
     }
     return false;
