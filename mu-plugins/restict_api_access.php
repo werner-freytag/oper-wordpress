@@ -1,4 +1,10 @@
 <?php
+# Checks if a string ends in a string
+function endsWith($haystack, $needle)
+{
+    return substr($haystack, -strlen($needle)) === $needle;
+}
+
 add_filter('rest_authentication_errors', function ($result) {
 
     if ('OPTIONS' == $_SERVER['REQUEST_METHOD']) {
@@ -22,6 +28,10 @@ add_filter('rest_authentication_errors', function ($result) {
     }
 
     if (strpos($_SERVER['REQUEST_URI'], '3460?_embed') != false) {
+        return $result;
+    }
+
+    if (endsWith($_SERVER['REQUEST_URI'], '/wp-json')) {
         return $result;
     }
 
@@ -67,8 +77,11 @@ function checkUserRightsToViewContent()
     return in_array('administrator', (array)$user->roles) || in_array('paywall_access', (array)$user->roles);
 }
 
-function checkSlug($data){
+function checkSlug($data)
+{
     switch ($data->data['slug']) {
+        case 'aktuelle-ausgabe':
+        case 'liebe-leserin-lieber-leser':
         case 'editorial':
             return true;
     }
@@ -78,7 +91,7 @@ function checkSlug($data){
 function post_restrict_content_user_json($data, $post, $context)
 {
     if (!checkUserRightsToViewContent() && !checkSlug($data)) {
-        if (isset($data->data['content'])){
+        if (isset($data->data['content'])) {
             $data->data['content']['rendered'] = null;
         }
     }
