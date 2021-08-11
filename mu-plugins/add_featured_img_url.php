@@ -9,6 +9,13 @@ function post_featured_image_json( $data, $post, $context ) {
         $data->data['featured_image_url'] = $featured_image_url[0];
     }
 
+    if (isset($data->data['categories']) && is_array($data->data['categories'])){
+        $data->data['categories_name'] = array();
+        foreach ($data->data['categories'] as $key => $value) {
+            array_push($data->data['categories_name'], array('name' => get_the_category_by_ID($value), 'id' => $value));
+        }
+    }
+
     return $data;
 }
 add_filter( 'rest_prepare_post', 'post_featured_image_json', 10, 3 );
