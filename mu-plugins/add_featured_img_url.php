@@ -16,6 +16,10 @@ function post_featured_image_json( $data, $post, $context ) {
         }
     }
 
+    if ($data->data['slug'] == 'banner-container'){
+        $data->data['title']['rendered'] = '';
+    }
+
     return $data;
 }
 add_filter( 'rest_prepare_post', 'post_featured_image_json', 10, 3 );
