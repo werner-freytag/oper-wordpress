@@ -83,7 +83,9 @@ function checkSlug($data)
         case 'aktuelle-ausgabe':
         case 'liebe-leserin-lieber-leser':
         case 'editorial':
+        case 'editorial-2':
         case 'impressum':
+        case 'banner-container':
         case 'datenschutzerklaerung':
             return true;
     }
@@ -94,7 +96,7 @@ function post_restrict_content_user_json($data, $post, $context)
 {
     if (!checkUserRightsToViewContent() && !checkSlug($data)) {
         if (isset($data->data['content'])) {
-            $data->data['content']['rendered'] = null;
+            $data->data['content']['rendered'] = '';
         }
     }
     return $data;
