@@ -25,6 +25,57 @@ add_action('rest_api_init', function () {
     ));
 });
 
+function sosu_get_downloads(WP_REST_Request $request)
+{
+
+    // $_SERVER['HTTP_AUTHORIZATION'] = "Bearer " . $request->get_param('token');;
+    // $redurl = $request->get_param('redurl');
+    $token = validate_token_my(false);
+    if (is_wp_error($token)) {
+        // wp_redirect(home_url() . '/' . $redurl);
+        exit;
+    }
+    $userId = $token->data->user->id;
+    // wp_set_auth_cookie($token->data->user->id, true);
+    // wp_redirect(home_url() . '/' . $redurl);
+    // $woocommerce->get('customers/2/downloads');
+
+    // curl https://example.com/wp-json/wc/v1/customers/2/downloads \
+    //    -u consumer_key:consumer_secret
+
+    $args = ['headers' => [
+        'Authorization' => 'Basic ck_dca5001d2900808af21af4d5a4780f96cdec7e49 cs_30359b3be6b6ace501041d5f779717575b8ca461',
+    ]];
+
+    $result = wp_remote_get(home_url() . '/wp-json/wc/v1/customers/'.$userId.'/downloads' , $args);
+
+    exit;
+}
+
+// add_action('rest_api_init', function () {
+//     register_rest_route('sosu/v1', 'downloads', array(
+//         'methods' => 'GET',
+//         'callback' => 'sosu_get_downloads',
+//     ));
+// });
+
+function sosu_extend_user_json($data, $user)
+{
+    $data['user_id'] = $user->ID;
+    return $data;
+}
+
+add_filter('jwt_auth_token_before_dispatch', 'sosu_extend_user_json', 10, 2);
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Main validation function, this function try to get the Autentication
