@@ -87,6 +87,7 @@ function checkSlug($data)
         case 'impressum':
         case 'banner-container':
         case 'datenschutzerklaerung':
+        case 'datenschutzerklaerung-app':
             return true;
     }
     return false;
