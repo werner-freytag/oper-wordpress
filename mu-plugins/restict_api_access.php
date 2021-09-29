@@ -31,6 +31,10 @@ add_filter('rest_authentication_errors', function ($result) {
         return $result;
     }
 
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-mail-smtp') != false) {
+        return $result;
+    }
+
     if (endsWith($_SERVER['REQUEST_URI'], '/wp-json')) {
         return $result;
     }
