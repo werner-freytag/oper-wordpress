@@ -23,6 +23,10 @@ add_filter('rest_authentication_errors', function ($result) {
         return $result;
     }
 
+    if (strpos($_SERVER['REQUEST_URI'], 'wc/v1/customers') != false) {
+        return $result;
+    }
+
     if (strpos($_SERVER['REQUEST_URI'], 'v2/posts') != false) {
         return $result;
     }
@@ -108,3 +112,20 @@ function post_restrict_content_user_json($data, $post, $context)
 }
 
 add_filter('rest_prepare_post', 'post_restrict_content_user_json', 10, 3);
+
+/*add_filter('woocommerce_rest_check_permissions',
+    function ($permission, $context, $object_id, $post_type) {
+        if ($context !== 'read') {
+            return $permission;
+        }
+
+        // $post_type_object = get_post_type_object($post_type);
+//
+        // if ($object_id) {
+        //     return current_user_can($post_type_object->cap->read_post, $object_id);
+        // }
+//
+        // return $post_type_object->has_archive;
+        return true;
+
+    }, 10, 4);*/
