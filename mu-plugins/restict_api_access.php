@@ -89,6 +89,7 @@ function checkSlug($data)
 {
     switch ($data->data['slug']) {
         case 'aktuelle-ausgabe':
+        case 'aktuelle-ausgabe-app ':
         case 'liebe-leserin-lieber-leser':
         case 'editorial':
         case 'editorial-2':
@@ -96,6 +97,7 @@ function checkSlug($data)
         case 'banner-container':
         case 'datenschutzerklaerung':
         case 'datenschutzerklaerung-app':
+        case 'oper-oktober-2021-2':
             return true;
     }
     return false;
