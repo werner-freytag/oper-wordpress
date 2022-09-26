@@ -15,6 +15,14 @@ add_filter('rest_authentication_errors', function ($result) {
         return $result;
     }
 
+    if (strpos($_SERVER['REQUEST_URI'], 'paypal') != false) {
+        return $result;
+    }
+
+    if (strpos($_SERVER['REQUEST_URI'], 'wc_stripe') != false) {
+        return $result;
+    }
+
     if (strpos($_SERVER['REQUEST_URI'], 'sosu') != false) {
         return $result;
     }
@@ -82,7 +90,7 @@ add_filter('rest_authentication_errors', function ($result) {
 function checkUserRightsToViewContent()
 {
     $user = wp_get_current_user();
-    return in_array('administrator', (array)$user->roles) || in_array('paywall_access', (array)$user->roles);
+    return in_array('administrator', (array)$user->roles) || in_array('editor', (array)$user->roles) || in_array('paywall_access', (array)$user->roles);
 }
 
 function checkSlug($data)
