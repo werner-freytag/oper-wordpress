@@ -31,6 +31,7 @@ function sosu_get_downloads(WP_REST_Request $request)
     // $_SERVER['HTTP_AUTHORIZATION'] = "Bearer " . $request->get_param('token');;
     // $redurl = $request->get_param('redurl');
     $token = validate_token_my(false);
+    return $token;
     if (is_wp_error($token)) {
         // wp_redirect(home_url() . '/' . $redurl);
         exit;
@@ -47,6 +48,7 @@ function sosu_get_downloads(WP_REST_Request $request)
         'Authorization' => 'Basic ck_dca5001d2900808af21af4d5a4780f96cdec7e49 cs_30359b3be6b6ace501041d5f779717575b8ca461',
     ]];
 
+
     $result = wc_get_customer_available_downloads($userId);
     return $result;
     exit;
@@ -56,6 +58,7 @@ add_action('rest_api_init', function () {
     register_rest_route('sosu/v1', 'downloads', array(
         'methods' => 'GET',
         'callback' => 'sosu_get_downloads',
+        'permission_callback' => '__return_true',
     ));
 });
 
