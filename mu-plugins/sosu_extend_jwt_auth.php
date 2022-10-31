@@ -2,6 +2,7 @@
 /** Requiere the JWT library. */
 
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 function my_awesome_func(WP_REST_Request $request)
 {
@@ -31,7 +32,7 @@ function sosu_get_downloads(WP_REST_Request $request)
     // $_SERVER['HTTP_AUTHORIZATION'] = "Bearer " . $request->get_param('token');;
     // $redurl = $request->get_param('redurl');
     $token = validate_token_my(false);
-    return $token;
+    // return $token;
     if (is_wp_error($token)) {
         // wp_redirect(home_url() . '/' . $redurl);
         exit;
@@ -71,15 +72,6 @@ function sosu_extend_user_json($data, $user)
 add_filter('jwt_auth_token_before_dispatch', 'sosu_extend_user_json', 10, 2);
 
 
-
-
-
-
-
-
-
-
-
 /**
  * Main validation function, this function try to get the Authentication
  * headers and decoded.
@@ -88,7 +80,7 @@ add_filter('jwt_auth_token_before_dispatch', 'sosu_extend_user_json', 10, 2);
  *
  * @return WP_Error | Object | Array
  */
-public function validate_token_my($output = true)
+function validate_token_my($output = true)
 {
     /*
      * Looking for the HTTP_AUTHORIZATION header, if not present just
@@ -142,7 +134,7 @@ public function validate_token_my($output = true)
     try {
         $token = JWT::decode(
             $token,
-            new Key($secret_key, apply_filters('jwt_auth_algorithm', 'HS256'))
+            new Key($secret_key, 'HS256')
         );
         /** The Token is decoded now validate the iss */
         if ($token->iss != get_bloginfo('url')) {
