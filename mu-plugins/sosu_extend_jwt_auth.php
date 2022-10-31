@@ -81,20 +81,21 @@ add_filter('jwt_auth_token_before_dispatch', 'sosu_extend_user_json', 10, 2);
 
 
 /**
- * Main validation function, this function try to get the Autentication
+ * Main validation function, this function try to get the Authentication
  * headers and decoded.
  *
  * @param bool $output
  *
  * @return WP_Error | Object | Array
  */
-function validate_token_my($output = true)
+public function validate_token_my($output = true)
 {
     /*
      * Looking for the HTTP_AUTHORIZATION header, if not present just
      * return the user.
      */
     $auth = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : false;
+
     /* Double check for different auth header string (server dependent) */
     if (!$auth) {
         $auth = isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : false;
@@ -130,7 +131,7 @@ function validate_token_my($output = true)
     if (!$secret_key) {
         return new WP_Error(
             'jwt_auth_bad_config',
-            'JWT is not configurated properly, please contact the admin',
+            'JWT is not configured properly, please contact the admin',
             array(
                 'status' => 403,
             )
@@ -139,7 +140,10 @@ function validate_token_my($output = true)
 
     /** Try to decode the token */
     try {
-        $token = JWT::decode($token, $secret_key, array('HS256'));
+        $token = JWT::decode(
+            $token,
+            new Key($secret_key, apply_filters('jwt_auth_algorithm', 'HS256'))
+        );
         /** The Token is decoded now validate the iss */
         if ($token->iss != get_bloginfo('url')) {
             /** The iss do not match, return error */
