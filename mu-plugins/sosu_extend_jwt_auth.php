@@ -23,6 +23,7 @@ add_action('rest_api_init', function () {
     register_rest_route('sosu/v1', '/auth/(?P<token>\S+)', array(
         'methods' => 'GET',
         'callback' => 'my_awesome_func',
+        'permission_callback' => '__return_true',
     ));
 });
 
@@ -31,7 +32,7 @@ function sosu_get_downloads(WP_REST_Request $request)
 
     // $_SERVER['HTTP_AUTHORIZATION'] = "Bearer " . $request->get_param('token');;
     // $redurl = $request->get_param('redurl');
-    $token = validate_token_my(false);
+    $token = validate_token_my($request);
     // return $token;
     if (is_wp_error($token)) {
         // wp_redirect(home_url() . '/' . $redurl);
@@ -71,6 +72,15 @@ function sosu_extend_user_json($data, $user)
 
 add_filter('jwt_auth_token_before_dispatch', 'sosu_extend_user_json', 10, 2);
 
+function get_algorithm_my() {
+    $algorithm = apply_filters( 'jwt_auth_algorithm', 'HS256' );
+    $supported_algorithms = [ 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512' ];
+    if ( ! in_array( $algorithm, $supported_algorithms ) ) {
+        return false;
+    }
+
+    return $algorithm;
+}
 
 /**
  * Main validation function, this function try to get the Authentication
@@ -80,103 +90,122 @@ add_filter('jwt_auth_token_before_dispatch', 'sosu_extend_user_json', 10, 2);
  *
  * @return WP_Error | Object | Array
  */
-function validate_token_my($output = true)
-{
+function validate_token_my( WP_REST_Request $request, $custom_token = false ) {
     /*
-     * Looking for the HTTP_AUTHORIZATION header, if not present just
-     * return the user.
+     * Looking for the Authorization header
+     *
+     * There is two ways to get the authorization token
+     *  1. via WP_REST_Request
+     *  2. via custom_token, we get this for all the other API requests
+     *
+     * The get_header( 'Authorization' ) checks for the header in the following order:
+     * 1. HTTP_AUTHORIZATION
+     * 2. REDIRECT_HTTP_AUTHORIZATION
+     *
+     * @see https://core.trac.wordpress.org/ticket/47077
      */
-    $auth = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : false;
 
-    /* Double check for different auth header string (server dependent) */
-    if (!$auth) {
-        $auth = isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : false;
-    }
+    $auth_header = $custom_token ?: $request->get_header( 'Authorization' );
 
-    if (!$auth) {
+    if ( ! $auth_header ) {
         return new WP_Error(
             'jwt_auth_no_auth_header',
             'Authorization header not found.',
-            array(
+            [
                 'status' => 403,
-            )
+            ]
         );
     }
 
     /*
-     * The HTTP_AUTHORIZATION is present verify the format
-     * if the format is wrong return the user.
+     * Extract the authorization header
      */
-    list($token) = sscanf($auth, 'Bearer %s');
-    if (!$token) {
+    [ $token ] = sscanf( $auth_header, 'Bearer %s' );
+
+    /**
+     * if the format is not valid return an error.
+     */
+    if ( ! $token ) {
         return new WP_Error(
             'jwt_auth_bad_auth_header',
             'Authorization header malformed.',
-            array(
+            [
                 'status' => 403,
-            )
+            ]
         );
     }
 
     /** Get the Secret Key */
-    $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : false;
-    if (!$secret_key) {
+    $secret_key = defined( 'JWT_AUTH_SECRET_KEY' ) ? JWT_AUTH_SECRET_KEY : false;
+    if ( ! $secret_key ) {
         return new WP_Error(
             'jwt_auth_bad_config',
             'JWT is not configured properly, please contact the admin',
-            array(
+            [
                 'status' => 403,
-            )
+            ]
         );
     }
 
     /** Try to decode the token */
     try {
-        $token = JWT::decode(
-            $token,
-            new Key($secret_key, 'HS256')
-        );
+        $algorithm = get_algorithm_my();
+        if ( $algorithm === false ) {
+            return new WP_Error(
+                'jwt_auth_unsupported_algorithm',
+                __( 'Algorithm not supported, see https://www.rfc-editor.org/rfc/rfc7518#section-3', 'wp-api-jwt-auth' ),
+                [
+                    'status' => 403,
+                ]
+            );
+        }
+
+        $token = JWT::decode( $token, new Key( $secret_key, $algorithm ) );
+
         /** The Token is decoded now validate the iss */
-        if ($token->iss != get_bloginfo('url')) {
+        if ( $token->iss !== get_bloginfo( 'url' ) ) {
             /** The iss do not match, return error */
             return new WP_Error(
                 'jwt_auth_bad_iss',
                 'The iss do not match with this server',
-                array(
+                [
                     'status' => 403,
-                )
+                ]
             );
         }
+
         /** So far so good, validate the user id in the token */
-        if (!isset($token->data->user->id)) {
+        if ( ! isset( $token->data->user->id ) ) {
             /** No user id in the token, abort!! */
             return new WP_Error(
                 'jwt_auth_bad_request',
                 'User ID not found in the token',
-                array(
+                [
                     'status' => 403,
-                )
+                ]
             );
         }
-        /** Everything looks good return the decoded token if the $output is false */
-        if (!$output) {
+
+        /** Everything looks good return the decoded token if we are using the custom_token */
+        if ( $custom_token ) {
             return $token;
         }
-        /** If the output is true return an answer to the request to show it */
-        return array(
+
+        /** This is for the /toke/validate endpoint*/
+        return [
             'code' => 'jwt_auth_valid_token',
-            'data' => array(
+            'data' => [
                 'status' => 200,
-            ),
-        );
-    } catch (Exception $e) {
-        /** Something is wrong trying to decode the token, send back the error */
+            ],
+        ];
+    } catch ( Exception $e ) {
+        /** Something were wrong trying to decode the token, send back the error */
         return new WP_Error(
             'jwt_auth_invalid_token',
             $e->getMessage(),
-            array(
+            [
                 'status' => 403,
-            )
+            ]
         );
     }
 }
