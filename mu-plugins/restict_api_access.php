@@ -107,6 +107,7 @@ function checkSlug($data)
         case 'datenschutzerklaerung-app':
         case 'e-paper-text-in-app':
         case 'login-text-app':
+        case 'account-text-app':
         case 'oper-oktober-2021-2':
             return true;
     }
