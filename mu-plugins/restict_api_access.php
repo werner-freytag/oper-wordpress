@@ -103,6 +103,9 @@ function checkSlug($data)
         case 'editorial-2':
         case 'impressum':
         case 'banner-container':
+        case 'banner-container_1':
+        case 'banner-container_2':
+        case 'banner-container_3':
         case 'datenschutzerklaerung':
         case 'datenschutzerklaerung-app':
         case 'e-paper-text-in-app':
