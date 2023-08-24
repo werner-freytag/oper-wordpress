@@ -111,6 +111,8 @@ function checkSlug($data)
         case 'e-paper-text-in-app':
         case 'login-text-app':
         case 'account-text-app':
+        case 'aida-arena-di-verona':
+        case 'semele-bayerische-staatsoper-2':
         case 'oper-oktober-2021-2':
             return true;
     }
