@@ -8,11 +8,7 @@ function endsWith($haystack, $needle)
 add_filter('rest_authentication_errors', function ($result) {
 
     if ('OPTIONS' == $_SERVER['REQUEST_METHOD']) {
-        return $result;
-    }
-
-    if (strpos($_SERVER['REQUEST_URI'], 'jwt-auth') != false) {
-        return $result;
+        return true;
     }
 
     if (strpos($_SERVER['REQUEST_URI'], 'paypal') != false) {
@@ -23,37 +19,43 @@ add_filter('rest_authentication_errors', function ($result) {
         return $result;
     }
 
-    if (strpos($_SERVER['REQUEST_URI'], 'sosu') != false) {
-        return $result;
-    }
-
-    if (strpos($_SERVER['REQUEST_URI'], 'wp/v2/categories') != false) {
-        return $result;
-    }
-
-    if (strpos($_SERVER['REQUEST_URI'], 'wc/v1/customers') != false) {
-        return $result;
-    }
-
-    if (strpos($_SERVER['REQUEST_URI'], 'v2/posts') != false) {
-        return $result;
-    }
-
-    if (strpos($_SERVER['REQUEST_URI'], '3460?_embed') != false) {
-        return $result;
-    }
-
     if (strpos($_SERVER['REQUEST_URI'], 'wp-mail-smtp') != false) {
         return $result;
     }
 
-    if (endsWith($_SERVER['REQUEST_URI'], '/wp-json')) {
-        return $result;
+    if (strpos($_SERVER['REQUEST_URI'], 'jwt-auth') != false) {
+        return true;
     }
 
-    // if (strpos($_SERVER['REQUEST_URI'], 'wp_json') == false) {
-    //     return $result;
-    // }
+    if ('GET' == $_SERVER['REQUEST_METHOD']) {
+
+
+
+
+        if (strpos($_SERVER['REQUEST_URI'], 'sosu') != false) {
+            return true;
+        }
+
+        if (strpos($_SERVER['REQUEST_URI'], 'wp/v2/categories')) {
+            return true;
+        }
+
+        if (strpos($_SERVER['REQUEST_URI'], 'wc/v1/customers') != false) {
+            return true;
+        }
+
+        if (strpos($_SERVER['REQUEST_URI'], 'v2/posts') != false) {
+            return true;
+        }
+
+        if (strpos($_SERVER['REQUEST_URI'], '3460?_embed') != false) {
+            return true;
+        }
+
+        if (endsWith($_SERVER['REQUEST_URI'], '/wp-json')) {
+            return true;
+        }
+    }
 
     // If a previous authentication check was applied,
     // pass that result along without modification.
@@ -73,7 +75,7 @@ add_filter('rest_authentication_errors', function ($result) {
 
     // User authorized. Checking roles
     if (checkUserRightsToViewContent()) {
-        return $result;
+        return true;
     }
 
     // If used has no autorized roles. Block.

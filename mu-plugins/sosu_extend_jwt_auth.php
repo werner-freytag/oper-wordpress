@@ -9,7 +9,7 @@ function my_awesome_func(WP_REST_Request $request)
 
     $_SERVER['HTTP_AUTHORIZATION'] = "Bearer " . $request->get_param('token');;
     $redurl = $request->get_param('redurl');
-    $token = validate_token_my(false);
+    $token = validate_token_my($request, $request->get_header( 'Authorization' ));
     if ($token instanceof WP_Error) {
         wp_redirect(home_url() . '/' . $redurl);
         exit;
@@ -32,7 +32,11 @@ function sosu_get_downloads(WP_REST_Request $request)
 
     // $_SERVER['HTTP_AUTHORIZATION'] = "Bearer " . $request->get_param('token');;
     // $redurl = $request->get_param('redurl');
-    $token = validate_token_my($request);
+    // $_SERVER['HTTP_AUTHORIZATION'] = "Bearer " . $request->get_param('token');
+    // $redurl = $request->get_param('redurl');
+
+    $token = validate_token_my($request, $request->get_header( 'Authorization' ));
+    // header( 'Access-Control-Allow-Origin: *' );
     // return $token;
     if (is_wp_error($token)) {
         // wp_redirect(home_url() . '/' . $redurl);
@@ -51,8 +55,7 @@ function sosu_get_downloads(WP_REST_Request $request)
     ]];
 
 
-    $result = wc_get_customer_available_downloads($userId);
-    return $result;
+    return wc_get_customer_available_downloads($userId);
     exit;
 }
 
